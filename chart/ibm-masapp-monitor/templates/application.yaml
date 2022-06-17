@@ -1,0 +1,13 @@
+apiVersion: apps.mas.ibm.com/v1
+kind: MonitorApp
+metadata:
+  name: {{ .Values.masapp.instanceid }}
+  labels:
+    mas.ibm.com/applicationId: {{ .Values.masapp.appid | quote  }}
+    mas.ibm.com/instanceId: {{ .Values.masapp.instanceid | quote }}
+    {{- include "ibm-masapp-monitor.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2" 
+spec:
+  bindings:
+    mongo: system

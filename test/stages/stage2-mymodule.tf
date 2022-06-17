@@ -6,4 +6,16 @@ module "gitops_module" {
   server_name = module.gitops.server_name
   namespace = module.gitops_namespace.name
   kubeseal_cert = module.gitops.sealed_secrets_cert
+
+  instanceid = module.iot.instname
+  entitlement_key = module.cp_catalogs.entitlement_key
+
+}
+
+resource null_resource write_namespace {
+  depends_on = [module.gitops_module]
+
+  provisioner "local-exec" {
+    command = "echo -n '${module.gitops_module.namespace}' > .namespace"
+  }
 }
