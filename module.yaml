@@ -2,22 +2,19 @@ name: gitops-mas-monitor
 type: gitops
 description: Module to populate a gitops repo with the resources to provision mas-monitor
 tags:
-  - tools
   - gitops
 versions:
   - platforms:
-      - kubernetes
-      - ocp3
       - ocp4
     dependencies:
       - id: gitops
         refs:
           - source: github.com/cloud-native-toolkit/terraform-tools-gitops.git
             version: '>= 1.1.0'
-      - id: namespace
+      - id: iot
         refs:
-          - source: github.com/cloud-native-toolkit/terraform-gitops-namespace.git
-            version: '>= 1.0.0'
+          - source: github.com/cloud-native-toolkit/terraform-gitops-mas-iot.git
+            version: '>= 1.1.0'            
     variables:
       - name: gitops_config
         moduleRef:
@@ -31,11 +28,11 @@ versions:
         moduleRef:
           id: gitops
           output: server_name
-      - name: namespace
-        moduleRef:
-          id: namespace
-          output: name
       - name: kubeseal_cert
         moduleRef:
           id: gitops
           output: sealed_secrets_cert
+      - name: instanceid
+        moduleRef:
+          id: iot
+          output: instname
