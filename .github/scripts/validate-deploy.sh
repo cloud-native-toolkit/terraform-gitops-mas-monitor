@@ -48,6 +48,10 @@ find . -name "*"
 
 set -e
 
+# need to wait to allow git to merge all the branches before validating content
+echo "waiting 5m to allow git to finish merging all branches..."
+sleep 5m
+
 validate_gitops_content "${NAMESPACE}" "${LAYER}" "${SERVER_NAME}" "${TYPE}" "${COMPONENT_NAME}" "values.yaml"
 
 check_k8s_namespace "${NAMESPACE}"
