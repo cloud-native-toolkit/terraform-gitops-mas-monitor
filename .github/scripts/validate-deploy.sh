@@ -76,21 +76,21 @@ check_k8s_resource "${NAMESPACE}" "deployment" "${INSTANCEID}-master"
 check_k8s_resource "${NAMESPACE}" "deployment" "${INSTANCEID}-monitor-entitymgr-ws"
 
 # wait for config to settle before destroy
-sleep 5m
+sleep 10m
 
 # check workspace config in app namespace is in ready state
-cfgstatus=$(kubectl get monitors.components.iot.ibm.com ${INSTANCEID} -n ${NAMESPACE} --no-headers -o custom-columns=":status.conditions[0].type")
+cfgstatus=$(kubectl get monitorworkspace.apps.mas.ibm.com -n ${NAMESPACE} --no-headers -o custom-columns=":status.conditions[0].type")
 
 count=0
 until [[ "${cfgstatus}" = "Ready" ]] || [[ $count -eq 60 ]]; do
-  echo "Waiting for ${INSTANCEID} in ${CORENAMESPACE}"
+  echo "Waiting for MonitorWorkspace in ${CORENAMESPACE}"
   count=$((count + 1))
-  cfgstatus=$(kubectl get monitors.components.iot.ibm.com ${INSTANCEID} -n ${NAMESPACE} --no-headers -o custom-columns=":status.conditions[0].type")
+  cfgstatus=$(kubectl get monitorworkspace.apps.mas.ibm.com -n ${NAMESPACE} --no-headers -o custom-columns=":status.conditions[0].type")
   sleep 60
 done
 
 if [[ $count -eq 60 ]]; then
-  echo "Timed out waiting for ${INSTANCEID} to become ready in ${NAMESPACE}"
+  echo "Timed out waiting for MonitorWorkspace to become ready in ${NAMESPACE}"
   kubectl get all -n "${NAMESPACE}"
   exit 1
 fi
