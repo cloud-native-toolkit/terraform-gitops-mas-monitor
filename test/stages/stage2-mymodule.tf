@@ -1,5 +1,14 @@
+resource "time_sleep" "wait_10_mins" {
+  depends_on = [ module.iot ]
+
+  // we need to do some throtteling due to rate limits being hit
+  // the iot stack would most likely be done in a separate layer as well
+  create_duration = "10m"
+}
+
 module "gitops_module" {
   source = "./module"
+  depends_on = [ time_sleep.wait_10_mins ]
 
   gitops_config = module.gitops.gitops_config
   git_credentials = module.gitops.git_credentials
