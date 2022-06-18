@@ -75,8 +75,8 @@ check_k8s_resource "${NAMESPACE}" "deployment" "${INSTANCEID}-master"
 
 check_k8s_resource "${NAMESPACE}" "deployment" "${INSTANCEID}-monitor-entitymgr-ws"
 
-# wait for config to settle before destroy
-sleep 10m
+# wait for workspace config
+sleep 15m
 
 # check workspace config in app namespace is in ready state
 cfgstatus=$(kubectl get monitorworkspace.apps.mas.ibm.com -n ${NAMESPACE} --no-headers -o custom-columns=":status.conditions[0].type")
@@ -100,3 +100,4 @@ sleep 10m
 
 cd ..
 rm -rf .testrepo
+

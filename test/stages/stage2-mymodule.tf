@@ -3,7 +3,7 @@ resource "time_sleep" "wait_20_mins_for_iot" {
 
   // we need to do some throtteling due to rate limits being hit
   // the iot stack would most likely be done in a separate layer as well
-  // and prevents needing a separate cluster just for iot prereq
+  // and this prevents needing a separate cluster just for iot prereq during development
   create_duration = "20m"
 }
 
