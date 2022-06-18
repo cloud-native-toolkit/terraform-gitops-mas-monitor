@@ -14,7 +14,8 @@ versions:
       - id: iot
         refs:
           - source: github.com/cloud-native-toolkit/terraform-gitops-mas-iot.git
-            version: '>= 1.1.0'            
+            version: '>= 1.1.0'
+        optional: true                
     variables:
       - name: gitops_config
         moduleRef:
