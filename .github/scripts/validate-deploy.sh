@@ -34,6 +34,10 @@ SERVER_NAME=$(jq -r '.server_name // "default"' gitops-output.json)
 LAYER=$(jq -r '.layer_dir // "2-services"' gitops-output.json)
 TYPE=$(jq -r '.type // "base"' gitops-output.json)
 
+APPNAME=$(jq -r '.appname // "manage"' gitops-output.json)
+WSNAME=$(jq -r '.ws_name // "demo"' gitops-output.json)
+INSTANCEID=$(jq -r '.inst_name // "masdemo"' gitops-output.json)
+
 mkdir -p .testrepo
 
 git clone https://${GIT_TOKEN}@${GIT_REPO} .testrepo
@@ -44,11 +48,56 @@ find . -name "*"
 
 set -e
 
+# need to wait to allow git to merge all the branches before validating content
+echo "waiting 5m to allow git to finish merging all branches..."
+sleep 5m
+
 validate_gitops_content "${NAMESPACE}" "${LAYER}" "${SERVER_NAME}" "${TYPE}" "${COMPONENT_NAME}" "values.yaml"
 
 check_k8s_namespace "${NAMESPACE}"
 
-#check_k8s_resource "${NAMESPACE}" "deployment" "${COMPONENT_NAME}"
+## testing for operator separtely here because it only needs 30min timer, the other deployments need much longer
+count=0
+until kubectl get deployment ibm-mas-monitor-operator -n ${NAMESPACE} || [[ $count -eq 30 ]]; do
+  echo "Waiting for deployment/ibm-mas-monitor-operator in ${NAMESPACE}"
+  count=$((count + 1))
+  sleep 60
+done
+
+if [[ $count -eq 30 ]]; then
+  echo "Timed out waiting for deployment/ibm-mas-monitor-operator in ${NAMESPACE}"
+  kubectl get all -n "${NAMESPACE}"
+  exit 1
+fi
+
+
+check_k8s_resource "${NAMESPACE}" "deployment" "${INSTANCEID}-master"
+
+check_k8s_resource "${NAMESPACE}" "deployment" "${INSTANCEID}-monitor-entitymgr-ws"
+
+# wait for workspace config
+sleep 15m
+
+# check workspace config in app namespace is in ready state
+cfgstatus=$(kubectl get monitorworkspace.apps.mas.ibm.com -n ${NAMESPACE} --no-headers -o custom-columns=":status.conditions[0].type")
+
+count=0
+until [[ "${cfgstatus}" = "Ready" ]] || [[ $count -eq 60 ]]; do
+  echo "Waiting for MonitorWorkspace in ${CORENAMESPACE}"
+  count=$((count + 1))
+  cfgstatus=$(kubectl get monitorworkspace.apps.mas.ibm.com -n ${NAMESPACE} --no-headers -o custom-columns=":status.conditions[0].type")
+  sleep 60
+done
+
+if [[ $count -eq 60 ]]; then
+  echo "Timed out waiting for MonitorWorkspace to become ready in ${NAMESPACE}"
+  kubectl get all -n "${NAMESPACE}"
+  exit 1
+fi
+
+# wait for config to settle before destroy
+sleep 10m
 
 cd ..
 rm -rf .testrepo
+
